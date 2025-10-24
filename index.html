@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIM Database</title>
+    <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --accent-color: #ff4e50;
+            --text-color: #ffffff;
+            --bg-color: #121212;
+            --card-bg: rgba(30, 30, 30, 0.8);
+            --glow-color: rgba(106, 17, 203, 0.6);
+            --sim-card-bg: rgba(50, 50, 50, 0.6);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color), #1a1a2e);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 95%;
+            max-width: 600px;
+            margin: 1rem auto;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 0 20px var(--glow-color);
+            position: relative;
+            z-index: 1;
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px var(--glow-color);
+            }
+            to {
+                box-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color);
+            }
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            text-shadow: 0 0 10px var(--secondary-color);
+            font-size: 1.8rem;
+        }
+        
+        .developer {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #aaa;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-size: 16px;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px var(--secondary-color);
+        }
+        
+        .get-data-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            background: linear-gradient(135deg, #4776E6, #8E54E9);
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .result-container {
+            margin-top: 2rem;
+            width: 100%;
+            display: none;
+        }
+        
+        .sim-card {
+            background: var(--sim-card-bg);
+            border-radius: 10px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .sim-number {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .result-item {
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .result-label {
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+        
+        .result-value {
+            word-break: break-word;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--secondary-color);
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #ff4e50;
+            text-align: center;
+            margin: 1rem 0;
+            display: none;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 78, 80, 0.1);
+        }
+        
+        .success {
+            color: #38ef7d;
+            text-align: center;
+            margin: 1rem 0;
+            display: none;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(56, 239, 125, 0.1);
+        }
+        
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+        
+        /* Mobile-specific improvements */
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+                margin: 0.5rem auto;
+                width: 98%;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .sim-card {
+                padding: 1rem;
+            }
+            
+            .result-item {
+                flex-direction: column;
+            }
+            
+            .result-label {
+                min-width: auto;
+                margin-bottom: 0.3rem;
+            }
+        }
+        
+        .api-status {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .api-status.online {
+            background: rgba(56, 239, 125, 0.1);
+            color: #38ef7d;
+        }
+        
+        .api-status.offline {
+            background: rgba(255, 78, 80, 0.1);
+            color: #ff4e50;
+        }
+        
+        .api-status.checking {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+        
+        .retry-btn {
+            background: linear-gradient(135deg, #ff4e50, #f7b733);
+            margin-top: 10px;
+        }
+        
+        .format-info {
+            background: rgba(37, 117, 252, 0.1);
+            color: #2575fc;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <h1>SIM Database</h1>
+        <p class="developer">Developed by RAMZAN AHSAN</p>
+        
+        <div class="api-status checking" id="apiStatus">
+            Checking API status...
+        </div>
+        
+        <div class="format-info">
+            Enter 11-digit mobile number (03XXXXXXXXX) or 13-digit CNIC
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="searchInput" placeholder="Enter Number (03xxxxxxxxx) or CNIC (13 digits)" maxlength="13">
+        </div>
+        
+        <button class="get-data-btn" id="getDataBtn" disabled>Get Data</button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing your request...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+        
+        <div class="result-container" id="resultContainer"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create particles
+            function createParticles() {
+                const particlesContainer = document.getElementById('particles');
+                const particleCount = 30; // Reduced for mobile performance
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    
+                    // Random position
+                    const posX = Math.random() * 100;
+                    const posY = Math.random() * 100;
+                    
+                    // Random size
+                    const size = Math.random() * 2 + 1;
+                    
+                    // Random animation duration
+                    const duration = Math.random() * 20 + 10;
+                    
+                    // Random delay
+                    const delay = Math.random() * 5;
+                    
+                    particle.style.left = `${posX}%`;
+                    particle.style.top = `${posY}%`;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.animationDuration = `${duration}s`;
+                    particle.style.animationDelay = `${delay}s`;
+                    
+                    particlesContainer.appendChild(particle);
+                }
+            }
+            
+            createParticles();
+            
+            const searchInput = document.getElementById('searchInput');
+            const getDataBtn = document.getElementById('getDataBtn');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const success = document.getElementById('success');
+            const resultContainer = document.getElementById('resultContainer');
+            const apiStatus = document.getElementById('apiStatus');
+            
+            // Check API status on load
+            checkApiStatus();
+            
+            // Input validation
+            searchInput.addEventListener('input', function() {
+                const value = this.value.trim();
+                const isValid = value.length === 11 || value.length === 13;
+                
+                // Enable button when valid input is entered
+                getDataBtn.disabled = !isValid;
+            });
+            
+            // Allow Enter key to submit
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !getDataBtn.disabled) {
+                    processRequest();
+                }
+            });
+            
+            // API processing
+            getDataBtn.addEventListener('click', function() {
+                processRequest();
+            });
+            
+            // Check API status
+            async function checkApiStatus() {
+                try {
+                    // Try to fetch from the API with a timeout using CORS proxy
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    
+                    // Use CORS proxy to bypass CORS restrictions
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                    const apiUrl = 'https://fam-official.serv00.net/api/database.php?number=03001234567';
+                    
+                    const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        apiStatus.textContent = 'API is online';
+                        apiStatus.className = 'api-status online';
+                    } else {
+                        apiStatus.textContent = 'API returned an error';
+                        apiStatus.className = 'api-status offline';
+                    }
+                } catch (err) {
+                    apiStatus.textContent = 'API is offline or unreachable';
+                    apiStatus.className = 'api-status offline';
+                    
+                    // Add retry button
+                    const retryBtn = document.createElement('button');
+                    retryBtn.textContent = 'Retry Connection';
+                    retryBtn.className = 'get-data-btn retry-btn';
+                    retryBtn.addEventListener('click', checkApiStatus);
+                    apiStatus.appendChild(retryBtn);
+                }
+            }
+            
+            async function processRequest() {
+                const searchValue = searchInput.value.trim();
+                
+                if (!searchValue) {
+                    showError('Please enter a valid number/CNIC');
+                    return;
+                }
+                
+                if (searchValue.length !== 11 && searchValue.length !== 13) {
+                    showError('Please enter a valid 11-digit number or 13-digit CNIC');
+                    return;
+                }
+                
+                // Show loading
+                loading.style.display = 'block';
+                error.style.display = 'none';
+                success.style.display = 'none';
+                resultContainer.style.display = 'none';
+                resultContainer.innerHTML = '';
+                
+                try {
+                    // Use CORS proxy to bypass CORS restrictions
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                    const apiUrl = `https://fam-official.serv00.net/api/database.php?number=${searchValue}`;
+                    
+                    // API call with timeout
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+                    
+                    const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (!data) {
+                        throw new Error('No data received from API');
+                    }
+                    
+                    // Display all operator data
+                    displayAllData(data);
+                    showSuccess('Data retrieved successfully!');
+                    
+                } catch (err) {
+                    loading.style.display = 'none';
+                    
+                    if (err.name === 'AbortError') {
+                        showError('Request timeout. Please check your internet connection and try again.');
+                    } else if (err.message.includes('Failed to fetch')) {
+                        showError('Network error. Please check your internet connection and try again.');
+                    } else {
+                        showError(err.message);
+                    }
+                    
+                    console.error('API Error:', err);
+                }
+            }
+            
+            function displayAllData(data) {
+                resultContainer.innerHTML = '';
+                
+                if (!data || Object.keys(data).length === 0) {
+                    showError('No SIM data found for the provided number/CNIC');
+                    return;
+                }
+                
+                // Check if data is in the expected format
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                // Handle different response formats
+                let simData = [];
+                
+                // If data is an array, use it directly
+                if (Array.isArray(data)) {
+                    simData = data;
+                } 
+                // If data is an object with operators as keys
+                else if (typeof data === 'object') {
+                    // Check if it's a single SIM object
+                    if (data.Mobile || data.CNIC) {
+                        simData = [data];
+                    } 
+                    // Check if it's an object with operator keys
+                    else {
+                        // Extract all SIMs from all operators
+                        for (const operator in data) {
+                            if (Array.isArray(data[operator])) {
+                                simData = simData.concat(data[operator]);
+                            }
+                        }
+                    }
+                }
+                
+                // If no valid data found
+                if (simData.length === 0) {
+                    showError('No valid SIM data found in the response');
+                    return;
+                }
+                
+                // Display all SIMs
+                simData.forEach((sim, index) => {
+                    if (!sim) return;
+                    
+                    const simCard = document.createElement('div');
+                    simCard.className = 'sim-card';
+                    
+                    const simTitle = document.createElement('div');
+                    simTitle.className = 'sim-number';
+                    simTitle.textContent = `SIM ${index + 1}`;
+                    simCard.appendChild(simTitle);
+                    
+                    // Create result items for each property
+                    for (const [key, value] of Object.entries(sim)) {
+                        if (value && typeof value === 'string') {
+                            // Clean up the data by removing brackets and extra spaces
+                            const cleanValue = value
+                                .replace(/[\[\]]/g, '') // Remove brackets
+                                .replace(/\s+/g, ' ')   // Replace multiple spaces with single space
+                                .trim();                // Remove leading/trailing spaces
+                            
+                            // Format the key for display
+                            const displayKey = formatKey(key);
+                            
+                            createResultItem(simCard, displayKey, cleanValue);
+                        }
+                    }
+                    
+                    resultContainer.appendChild(simCard);
+                });
+                
+                resultContainer.style.display = 'block';
+                loading.style.display = 'none';
+            }
+            
+            function formatKey(key) {
+                // Convert camelCase or snake_case to Title Case
+                return key
+                    .replace(/([A-Z])/g, ' $1')
+                    .replace(/_/g, ' ')
+                    .replace(/\b\w/g, l => l.toUpperCase())
+                    .trim();
+            }
+            
+            function createResultItem(container, label, value) {
+                if (!value) return;
+                
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'result-label';
+                labelSpan.textContent = label;
+                
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'result-value';
+                valueSpan.textContent = value;
+                
+                resultItem.appendChild(labelSpan);
+                resultItem.appendChild(valueSpan);
+                container.appendChild(resultItem);
+            }
+            
+            function showError(message) {
+                error.textContent = message;
+                error.style.display = 'block';
+                loading.style.display = 'none';
+            }
+            
+            function showSuccess(message) {
+                success.textContent = message;
+                success.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
