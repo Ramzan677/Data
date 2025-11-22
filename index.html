@@ -312,11 +312,11 @@
         </div>
         
         <div class="format-info">
-            Enter 11-digit mobile number (03XXXXXXXXX) or 13-digit CNIC
+            Enter 11-digit mobile number (03XXXXXXXXX)
         </div>
         
         <div class="input-group">
-            <input type="text" id="searchInput" placeholder="Enter Number (03xxxxxxxxx) or CNIC (13 digits)" maxlength="13">
+            <input type="text" id="searchInput" placeholder="Enter Number (03001234567)" maxlength="13">
         </div>
         
         <button class="get-data-btn" id="getDataBtn" disabled>Get Data</button>
@@ -382,8 +382,10 @@
             
             // Input validation
             searchInput.addEventListener('input', function() {
-                const value = this.value.trim();
-                const isValid = value.length === 11 || value.length === 13;
+                const value = this.value.replace(/\D/g, ''); // Remove non-digits
+                
+                // Valid if 11 digits (03...) or 12 digits (923...) or 13 digits (CNIC)
+                const isValid = value.length === 11 || value.length === 12 || value.length === 13;
                 
                 // Enable button when valid input is entered
                 getDataBtn.disabled = !isValid;
@@ -404,15 +406,15 @@
             // Check API status
             async function checkApiStatus() {
                 try {
-                    // Try to fetch from the API with a timeout using CORS proxy
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000);
                     
                     // Use CORS proxy to bypass CORS restrictions
+                    // Using a test number for status check
                     const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                    const apiUrl = 'https://fam-official.serv00.net/api/database.php?number=03001234567';
+                    const testUrl = 'https://legendxdata.site/Api/simdata.php?phone=923001234567';
                     
-                    const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
+                    const response = await fetch(proxyUrl + encodeURIComponent(testUrl), {
                         signal: controller.signal
                     });
                     
@@ -439,16 +441,17 @@
             }
             
             async function processRequest() {
-                const searchValue = searchInput.value.trim();
+                let searchValue = searchInput.value.trim().replace(/\D/g, ''); // Keep only digits
                 
                 if (!searchValue) {
-                    showError('Please enter a valid number/CNIC');
+                    showError('Please enter a valid number');
                     return;
                 }
                 
-                if (searchValue.length !== 11 && searchValue.length !== 13) {
-                    showError('Please enter a valid 11-digit number or 13-digit CNIC');
-                    return;
+                // Format conversion logic
+                // If it's an 11-digit mobile number starting with 03... convert to 923...
+                if (searchValue.length === 11 && searchValue.startsWith('03')) {
+                    searchValue = '92' + searchValue.substring(1);
                 }
                 
                 // Show loading
@@ -461,7 +464,8 @@
                 try {
                     // Use CORS proxy to bypass CORS restrictions
                     const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                    const apiUrl = `https://fam-official.serv00.net/api/database.php?number=${searchValue}`;
+                    // New API Endpoint with the formatted phone number
+                    const apiUrl = `https://legendxdata.site/Api/simdata.php?phone=${searchValue}`;
                     
                     // API call with timeout
                     const controller = new AbortController();
@@ -479,10 +483,6 @@
                     
                     const data = await response.json();
                     
-                    if (!data) {
-                        throw new Error('No data received from API');
-                    }
-                    
                     // Display all operator data
                     displayAllData(data);
                     showSuccess('Data retrieved successfully!');
@@ -494,6 +494,8 @@
                         showError('Request timeout. Please check your internet connection and try again.');
                     } else if (err.message.includes('Failed to fetch')) {
                         showError('Network error. Please check your internet connection and try again.');
+                    } else if (err.name === 'SyntaxError') {
+                         showError('No data found or API returned invalid response.');
                     } else {
                         showError(err.message);
                     }
@@ -505,71 +507,61 @@
             function displayAllData(data) {
                 resultContainer.innerHTML = '';
                 
-                if (!data || Object.keys(data).length === 0) {
-                    showError('No SIM data found for the provided number/CNIC');
-                    return;
-                }
-                
-                // Check if data is in the expected format
-                if (data.error) {
-                    showError(data.error);
-                    return;
-                }
-                
-                // Handle different response formats
                 let simData = [];
                 
-                // If data is an array, use it directly
+                // Handle various response structures
                 if (Array.isArray(data)) {
                     simData = data;
-                } 
-                // If data is an object with operators as keys
-                else if (typeof data === 'object') {
-                    // Check if it's a single SIM object
-                    if (data.Mobile || data.CNIC) {
-                        simData = [data];
-                    } 
-                    // Check if it's an object with operator keys
-                    else {
-                        // Extract all SIMs from all operators
-                        for (const operator in data) {
-                            if (Array.isArray(data[operator])) {
-                                simData = simData.concat(data[operator]);
+                } else if (typeof data === 'object' && data !== null) {
+                     // Some APIs wrap the result in a 'data' or 'result' key
+                    if (Array.isArray(data.data)) {
+                        simData = data.data;
+                    } else {
+                        // Convert single object to array if it looks like a record
+                        // or check if it has keys that look like records
+                        if (data.name || data.NAME || data.Name || data.CNIC) {
+                            simData = [data];
+                        } else {
+                             // Try to find arrays inside the object values
+                            for (const key in data) {
+                                if (Array.isArray(data[key])) {
+                                    simData = simData.concat(data[key]);
+                                }
                             }
                         }
                     }
                 }
                 
+                // Filter out empty or error objects
+                simData = simData.filter(item => item && !item.error && Object.keys(item).length > 0);
+                
                 // If no valid data found
                 if (simData.length === 0) {
-                    showError('No valid SIM data found in the response');
+                    showError('No record found for this number.');
+                    loading.style.display = 'none';
                     return;
                 }
                 
                 // Display all SIMs
                 simData.forEach((sim, index) => {
-                    if (!sim) return;
-                    
                     const simCard = document.createElement('div');
                     simCard.className = 'sim-card';
                     
                     const simTitle = document.createElement('div');
                     simTitle.className = 'sim-number';
-                    simTitle.textContent = `SIM ${index + 1}`;
+                    simTitle.textContent = `Record ${index + 1}`;
                     simCard.appendChild(simTitle);
                     
                     // Create result items for each property
                     for (const [key, value] of Object.entries(sim)) {
-                        if (value && typeof value === 'string') {
-                            // Clean up the data by removing brackets and extra spaces
-                            const cleanValue = value
-                                .replace(/[\[\]]/g, '') // Remove brackets
-                                .replace(/\s+/g, ' ')   // Replace multiple spaces with single space
-                                .trim();                // Remove leading/trailing spaces
+                        // Skip empty values or technical keys
+                        if (value && typeof value === 'string' && key !== 'status' && key !== 'response') {
+                             const cleanValue = value
+                                .replace(/[\[\]]/g, '') 
+                                .replace(/\s+/g, ' ')   
+                                .trim();                
                             
-                            // Format the key for display
                             const displayKey = formatKey(key);
-                            
                             createResultItem(simCard, displayKey, cleanValue);
                         }
                     }
@@ -582,10 +574,10 @@
             }
             
             function formatKey(key) {
-                // Convert camelCase or snake_case to Title Case
+                // Convert camelCase, snake_case, or UPPERCASE to Title Case
                 return key
-                    .replace(/([A-Z])/g, ' $1')
                     .replace(/_/g, ' ')
+                    .toLowerCase()
                     .replace(/\b\w/g, l => l.toUpperCase())
                     .trim();
             }
