@@ -1,499 +1,353 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>SIM Database</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simdata - Developed by Ramzan Ahsan</title>
+    <meta name="description" content="Simdata Portal - Search Network Details">
+    
+    <!-- Tailwind CSS (Styling Framework) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome (Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        :root {
-            --primary-color: #6a11cb;
-            --secondary-color: #2575fc;
-            --accent-color: #ff4e50;
-            --text-color: #ffffff;
-            --bg-color: #121212;
-            --card-bg: rgba(30, 30, 30, 0.8);
-            --glow-color: rgba(106, 17, 203, 0.6);
-            --sim-card-bg: rgba(50, 50, 50, 0.6);
-        }
-        
-        * { box-sizing: border-box; }
-        
+        /* --- CORE STYLES --- */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--bg-color), #1a1a2e);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            overflow-x: hidden;
         }
-        
-        .container {
-            width: 95%;
-            max-width: 600px;
-            margin: 1rem auto;
-            padding: 1.5rem;
-            background: var(--card-bg);
-            border-radius: 15px;
-            box-shadow: 0 0 20px var(--glow-color);
-            position: relative;
-            z-index: 1;
-            animation: glow 2s infinite alternate;
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-        
-        @keyframes glow {
-            from { box-shadow: 0 0 10px var(--glow-color); }
-            to { box-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color); }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         }
-        
-        h1 {
-            text-align: center;
-            margin-bottom: 0.5rem;
-            color: var(--text-color);
-            text-shadow: 0 0 10px var(--secondary-color);
-            font-size: 1.8rem;
+
+        .result-area {
+            animation: slideUp 0.5s ease-out forwards;
         }
-        
-        .developer {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: #aaa;
-            font-style: italic;
-            font-size: 0.9rem;
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        .input-group { margin-bottom: 1.5rem; }
-        
-        input {
-            width: 100%;
-            padding: 12px 15px;
-            border: none;
-            border-radius: 8px;
+
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
             background: rgba(255,255,255,0.1);
-            color: var(--text-color);
-            font-size: 16px;
-            margin-bottom: 1rem;
-            transition: all 0.3s;
         }
-        input:focus {
-            outline: none;
-            background: rgba(255,255,255,0.2);
-            box-shadow: 0 0 10px var(--secondary-color);
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
         }
         
-        .get-data-btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 16px;
-            background: linear-gradient(135deg, #4776E6, #8E54E9);
-            color: white;
-            margin-bottom: 1.5rem;
-        }
-        button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        button:active { transform: translateY(0); }
-        
-        .result-container { margin-top: 2rem; width: 100%; display: none; }
-        
-        .sim-card {
-            background: var(--sim-card-bg);
-            border-radius: 10px;
-            padding: 1.2rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .sim-number {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--secondary-color);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .result-item {
-            margin-bottom: 0.8rem;
-            padding-bottom: 0.8rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            flex-direction: column;
-        }
-        .result-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        
-        .result-label {
-            font-weight: bold;
-            color: var(--secondary-color);
-            margin-bottom: 0.3rem;
-            font-size: 0.9rem;
-        }
-        .result-value { word-break: break-word; }
-        
-        .loading { display: none; text-align: center; margin: 1rem 0; }
-        .spinner {
-            border: 4px solid rgba(255,255,255,0.3);
+        /* --- LOADER --- */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
             border-radius: 50%;
-            border-top: 4px solid var(--secondary-color);
-            width: 30px; height: 30px;
-            animation: spin 1s linear infinite; margin: 0 auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .error {
-            color: #ff4e50;
-            text-align: center;
-            margin: 1rem 0;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
             display: none;
-            padding: 10px;
-            border-radius: 5px;
-            background: rgba(255,78,80,0.1);
+            margin: 0 auto;
         }
-        .success {
-            color: #38ef7d;
-            text-align: center;
-            margin: 1rem 0;
-            display: none;
-            padding: 10px;
-            border-radius: 5px;
-            background: rgba(56,239,125,0.1);
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        
-        .particles {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0; pointer-events: none;
+
+        /* --- GLOW EFFECTS --- */
+        .glow-title {
+            animation: glow 2s ease-in-out infinite alternate;
         }
-        .particle {
-            position: absolute; width: 2px; height: 2px;
-            background: rgba(255,255,255,0.5); border-radius: 50%;
-            animation: float linear infinite;
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px #fff, 0 0 10px #ffffff80;
+            }
+            to {
+                text-shadow: 0 0 20px #fff, 0 0 30px #ffffffcc, 0 0 40px #ffffff80;
+            }
         }
-        @keyframes float {
-            0% { transform: translateY(0) translateX(0); opacity: 1; }
-            100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
+
+        .glow-subtitle {
+             animation: glow-sub 2s ease-in-out infinite alternate;
         }
-        
-        @media (max-width: 480px) {
-            .container { padding: 1rem; margin: 0.5rem auto; width: 98%; }
-            h1 { font-size: 1.5rem; }
-            .sim-card { padding: 1rem; }
-            .result-item { flex-direction: column; }
-            .result-label { min-width: auto; margin-bottom: 0.3rem; }
+
+        @keyframes glow-sub {
+             from {
+                box-shadow: 0 0 5px rgba(255,255,255,0.2);
+                text-shadow: 0 0 2px #fff;
+            }
+            to {
+                box-shadow: 0 0 20px rgba(255,255,255,0.6);
+                text-shadow: 0 0 8px #fff;
+            }
         }
-        
-        .api-status { text-align: center; margin-bottom: 1rem; padding: 8px; border-radius: 5px; font-size: 0.9rem; }
-        .api-status.online { background: rgba(56,239,125,0.1); color: #38ef7d; }
-        .api-status.offline { background: rgba(255,78,80,0.1); color: #ff4e50; }
-        .api-status.checking { background: rgba(255,193,7,0.1); color: #ffc107; }
-        .retry-btn { background: linear-gradient(135deg, #ff4e50, #f7b733); margin-top: 10px; }
-        .format-info { background: rgba(37,117,252,0.1); color: #2575fc; padding: 10px; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; text-align: center; }
     </style>
 </head>
-<body>
-    <div class="particles" id="particles"></div>
-    <div class="container">
-        <h1>SIM Database</h1>
-        <p class="developer">Developed by RAMZAN AHSAN</p>
+<body class="text-gray-800">
 
-        <div class="api-status checking" id="apiStatus">Checking API status...</div>
+    <!-- Header -->
+    <header class="w-full p-6 text-center text-white relative z-10">
+        <h1 class="text-5xl font-bold mb-4 tracking-tight glow-title">Simdata Portal</h1>
+        <p class="text-xl font-light tracking-wider bg-black/20 inline-block px-4 py-1 rounded-full backdrop-blur-sm glow-subtitle">
+            Developed by Ramzan Ahsan
+        </p>
+    </header>
 
-        <div class="format-info">Enter 12-digit mobile number (923XXXXXXXXX)</div>
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-4 w-full">
+        <!-- Main Card -->
+        <div class="glass-panel w-full max-w-7xl rounded-3xl p-6 md:p-8 transform transition-all duration-300">
+            
+            <!-- Search Input Area -->
+            <div class="mb-8 max-w-xl mx-auto">
+                <label for="phoneNumber" class="block text-gray-700 text-sm font-bold mb-2 ml-1">
+                    Enter Mobile Number or CNIC
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="number" id="phoneNumber" 
+                        class="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-200 transition-all bg-gray-50 text-lg placeholder-gray-400" 
+                        placeholder="03001234567 or 35202..."
+                    >
+                </div>
+                
+                <button onclick="fetchData()" class="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-500 text-white font-bold py-3 px-6 rounded-xl hover:shadow-lg hover:from-purple-700 hover:to-blue-600 transform active:scale-95 transition-all duration-200 flex justify-center items-center gap-2">
+                    <i class="fas fa-database"></i> Get Data
+                </button>
+            </div>
 
-        <div class="input-group">
-            <input type="text" id="searchInput" placeholder="Enter Number (923001234567)" maxlength="13" />
+            <!-- Loader -->
+            <div id="loader" class="loader mb-4"></div>
+
+            <!-- Error Message Box -->
+            <div id="errorMsg" class="hidden max-w-xl mx-auto bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded mb-4 animate-pulse">
+                <p class="font-bold">Error</p>
+                <p id="errorText">Please enter a valid input.</p>
+            </div>
+
+            <!-- Results Section (Hidden by default) -->
+            <div id="resultArea" class="hidden result-area">
+                <div class="bg-white rounded-2xl shadow-inner p-4 md:p-6 border border-gray-100 relative overflow-hidden flex flex-col">
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
+                        <i class="fas fa-table text-purple-600"></i> Search Results
+                    </h3>
+                    
+                    <!-- Data Table -->
+                    <div id="dataContent" class="w-full"></div>
+
+                    <!-- Watermark -->
+                    <div class="mt-6 pt-4 border-t border-dashed border-gray-300 text-center">
+                        <span class="text-xs font-bold text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-full">
+                            <i class="fas fa-check-circle"></i> Data Credit by Ramzan Ahsan
+                        </span>
+                    </div>
+                </div>
+            </div>
+
         </div>
+    </main>
 
-        <button class="get-data-btn" id="getDataBtn" disabled>Get Data</button>
-
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Processing your request...</p>
+    <!-- Footer -->
+    <footer class="bg-black/30 backdrop-blur-md text-white py-6 mt-auto">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-sm opacity-80">
+                &copy; 2024 Simdata. All rights reserved.
+            </div>
+            
+            <a href="https://chat.whatsapp.com/LoafyPWMGOv88oElxdwOB8" target="_blank" class="group flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full font-semibold transition-all shadow-lg hover:shadow-green-500/30">
+                <i class="fab fa-whatsapp text-xl group-hover:animate-bounce"></i>
+                <span>Join Official WhatsApp Group</span>
+            </a>
         </div>
+    </footer>
 
-        <div class="error" id="error"></div>
-        <div class="success" id="success"></div>
-
-        <div class="result-container" id="resultContainer"></div>
-    </div>
-
+    <!-- Application Logic -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // ---------- Particles ----------
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 30;
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                const posX = Math.random() * 100;
-                const posY = Math.random() * 100;
-                const size = Math.random() * 2 + 1;
-                const duration = Math.random() * 20 + 10;
-                const delay = Math.random() * 5;
-                particle.style.left = `${posX}%`;
-                particle.style.top = `${posY}%`;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                particle.style.animationDuration = `${duration}s`;
-                particle.style.animationDelay = `${delay}s`;
-                particlesContainer.appendChild(particle);
-            }
-        }
-        createParticles();
+        async function fetchData() {
+            const input = document.getElementById('phoneNumber');
+            const resultArea = document.getElementById('resultArea');
+            const dataContent = document.getElementById('dataContent');
+            const loader = document.getElementById('loader');
+            const errorMsg = document.getElementById('errorMsg');
+            const errorText = document.getElementById('errorText');
+            let number = input.value.trim();
 
-        // ---------- Elements ----------
-        const searchInput = document.getElementById('searchInput');
-        const getDataBtn = document.getElementById('getDataBtn');
-        const loading = document.getElementById('loading');
-        const error = document.getElementById('error');
-        const success = document.getElementById('success');
-        const resultContainer = document.getElementById('resultContainer');
-        const apiStatus = document.getElementById('apiStatus');
-
-        // ---------- CONFIG ----------
-        // If your API supports CORS directly, set CORS_PROXY = '' for best performance.
-        // If not, keep a proxy. Note: public proxies can be unreliable/slow. Best solution: enable CORS on server or create your own proxy (Cloudflare Worker / serverless).
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url='; // '' to disable
-        const API_BASE = 'https://legendxdata.site/Api/simdata.php?phone=';
-
-        // ---------- Robust fetch with retries, timeout & backoff ----------
-        async function fetchWithRetry(rawUrl, options = {}, { retries = 2, timeout = 20000, retryDelay = 800, backoffFactor = 2 } = {}) {
-            let attempt = 0;
-            let delay = retryDelay;
-            while (attempt <= retries) {
-                attempt++;
-                const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), timeout);
-                try {
-                    const response = await fetch(rawUrl, { signal: controller.signal, ...options });
-                    clearTimeout(id);
-
-                    if (!response.ok) {
-                        // 4xx -> likely client error (don't retry); 5xx -> retry
-                        if (response.status >= 500 || response.status === 0) {
-                            throw new Error(`Server error ${response.status}`);
-                        } else {
-                            const text = await response.text();
-                            throw new Error(`API error ${response.status}: ${text}`);
-                        }
-                    }
-
-                    const contentType = response.headers.get('content-type') || '';
-                    if (contentType.includes('application/json') || contentType.includes('text/json')) {
-                        return await response.json();
-                    } else {
-                        const txt = await response.text();
-                        try {
-                            return JSON.parse(txt);
-                        } catch (e) {
-                            return { raw: txt };
-                        }
-                    }
-                } catch (err) {
-                    clearTimeout(id);
-                    const isAbort = err.name === 'AbortError';
-                    const isNetwork = err.message && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('Server error'));
-                    if (attempt > retries || (!isAbort && !isNetwork && !err.message.includes('Server error'))) {
-                        throw err;
-                    }
-                    // wait (exponential backoff)
-                    await new Promise(res => setTimeout(res, delay));
-                    delay *= backoffFactor;
-                }
-            }
-        }
-
-        // ---------- Simple session cache ----------
-        function cacheGet(key) {
-            try { const raw = sessionStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch { return null; }
-        }
-        function cacheSet(key, value) {
-            try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
-        }
-
-        // ---------- API status check ----------
-        async function checkApiStatus() {
-            apiStatus.className = 'api-status checking';
-            apiStatus.textContent = 'Checking API status...';
-            const testNumber = '923001234567';
-            const url = (CORS_PROXY ? CORS_PROXY + encodeURIComponent(API_BASE + testNumber) : (API_BASE + testNumber));
-            try {
-                await fetchWithRetry(url, {}, { retries: 1, timeout: 7000, retryDelay: 700 });
-                apiStatus.className = 'api-status online';
-                apiStatus.textContent = 'API is online';
-            } catch (err) {
-                apiStatus.className = 'api-status offline';
-                apiStatus.textContent = 'API is offline or unreachable';
-                if (!document.getElementById('apiRetryBtn')) {
-                    const retryBtn = document.createElement('button');
-                    retryBtn.textContent = 'Retry Connection';
-                    retryBtn.id = 'apiRetryBtn';
-                    retryBtn.className = 'get-data-btn retry-btn';
-                    retryBtn.style.marginTop = '8px';
-                    retryBtn.addEventListener('click', () => {
-                        retryBtn.remove();
-                        checkApiStatus();
-                    });
-                    apiStatus.appendChild(retryBtn);
-                }
-            }
-        }
-        checkApiStatus();
-
-        // ---------- Input handling ----------
-        searchInput.addEventListener('input', function() {
-            const value = this.value.replace(/\D/g, '');
-            const isValid = value.length === 11 || value.length === 12 || value.length === 13;
-            getDataBtn.disabled = !isValid;
-        });
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !getDataBtn.disabled) processRequest();
-        });
-        getDataBtn.addEventListener('click', processRequest);
-
-        // ---------- Process request ----------
-        async function processRequest() {
-            let searchValue = searchInput.value.trim().replace(/\D/g, '');
-            if (!searchValue) { showError('Please enter a valid number'); return; }
-
-            // Format: if 11 digits starting with 03 -> convert to 92...
-            if (searchValue.length === 11 && searchValue.startsWith('03')) {
-                searchValue = '92' + searchValue.substring(1);
-            }
-
-            const cacheKey = `sim_${searchValue}`;
-            const cached = cacheGet(cacheKey);
-            if (cached) {
-                displayAllData(cached);
-                showSuccess('Data loaded from cache');
+            // 1. Reset UI
+            resultArea.classList.add('hidden');
+            errorMsg.classList.add('hidden');
+            dataContent.innerHTML = ''; 
+            
+            // 2. Validation
+            if (!number || number.length < 10) {
+                errorText.innerText = "Please enter a valid Phone Number or CNIC.";
+                errorMsg.classList.remove('hidden');
                 return;
             }
 
-            loading.style.display = 'block';
-            error.style.display = 'none';
-            success.style.display = 'none';
-            resultContainer.style.display = 'none';
-            resultContainer.innerHTML = '';
+            // 3. Formatting
+            if (number.startsWith('0') && number.length === 11) {
+                number = '92' + number.substring(1);
+            } else if (number.startsWith('3') && number.length === 10) {
+                number = '92' + number;
+            }
+            
+            // 4. Loading State
+            loader.style.display = 'block';
 
-            const apiUrl = API_BASE + searchValue;
-            const finalUrl = CORS_PROXY ? (CORS_PROXY + encodeURIComponent(apiUrl)) : apiUrl;
+            // 5. API Request
+            const apiBaseUrl = "https://sychosimdatabase.vercel.app/api/lookup/"; 
 
             try {
-                const data = await fetchWithRetry(finalUrl, {}, { retries: 3, timeout: 20000, retryDelay: 800 });
-                cacheSet(cacheKey, data);
-                displayAllData(data);
-                showSuccess('Data retrieved successfully!');
-            } catch (err) {
-                loading.style.display = 'none';
-                if (err.name === 'AbortError') {
-                    showError('Request timeout. Please check your internet connection and try again.');
-                } else if (err.message && err.message.includes('Failed to fetch')) {
-                    showError('Network error or CORS/proxy issue. Try again or use a different network.');
-                } else if (err.name === 'SyntaxError') {
-                    showError('No data found or API returned invalid response.');
-                } else {
-                    showError(err.message || 'Unknown error occurred.');
+                const response = await fetch(`${apiBaseUrl}${number}`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
                 }
-                console.error('API Error:', err);
-            }
-        }
 
-        // ---------- Display helpers ----------
-        function displayAllData(data) {
-            resultContainer.innerHTML = '';
-            let simData = [];
+                const apiResponse = await response.json();
+                
+                // 6. Data Parsing
+                let records = [];
 
-            if (Array.isArray(data)) {
-                simData = data;
-            } else if (typeof data === 'object' && data !== null) {
-                if (Array.isArray(data.data)) {
-                    simData = data.data;
-                } else {
-                    if (data.name || data.NAME || data.Name || data.CNIC) {
-                        simData = [data];
-                    } else {
-                        for (const key in data) {
-                            if (Array.isArray(data[key])) {
-                                simData = simData.concat(data[key]);
-                            }
-                        }
-                        if (simData.length === 0 && Object.keys(data).length > 0) {
-                            simData = [data];
+                // Handle various API structures
+                if (apiResponse.results && Array.isArray(apiResponse.results)) {
+                    records = apiResponse.results;
+                } else if (Array.isArray(apiResponse)) {
+                    records = apiResponse;
+                } else if (apiResponse.data && Array.isArray(apiResponse.data)) {
+                    records = apiResponse.data;
+                } else if (apiResponse.data && typeof apiResponse.data === 'object') {
+                    records = [apiResponse.data];
+                } else if (typeof apiResponse === 'object') {
+                    records = [apiResponse];
+                }
+
+                records = records.filter(r => r && typeof r === 'object' && !r.error);
+
+                if (records.length === 0) {
+                    throw new Error("No record found.");
+                }
+
+                // 7. Render Table
+                let html = `
+                    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gradient-to-r from-purple-100 to-blue-50">
+                                <tr>
+                                    <th scope="col" class="px-4 py-4 text-left text-xs font-bold text-purple-700 uppercase tracking-wider">Mobile Number</th>
+                                    <th scope="col" class="px-4 py-4 text-left text-xs font-bold text-purple-700 uppercase tracking-wider">Name</th>
+                                    <th scope="col" class="px-4 py-4 text-left text-xs font-bold text-purple-700 uppercase tracking-wider">CNIC</th>
+                                    <th scope="col" class="px-4 py-4 text-left text-xs font-bold text-purple-700 uppercase tracking-wider">Address</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                `;
+                
+                records.forEach((record, index) => {
+                    // Smart Field Mapping
+                    const fieldMap = {
+                        number: 'N/A',
+                        name: 'N/A',
+                        cnic: 'N/A',
+                        address: 'N/A'
+                    };
+                    
+                    for (const [key, value] of Object.entries(record)) {
+                        if (value === null || value === undefined || value === "") continue;
+                        
+                        const lowerKey = key.trim().toLowerCase();
+                        const strValue = String(value).trim();
+                        
+                        if (lowerKey.match(/number|phone|mobile|cell|msisdn|contact/)) {
+                            fieldMap.number = strValue;
+                        } else if (lowerKey.match(/name|full|first|last|customer|subscriber|owner/)) {
+                            fieldMap.name = strValue;
+                        } else if (lowerKey.match(/cnic|identity|nic|id_card|idcard/)) {
+                            fieldMap.cnic = strValue;
+                        } else if (lowerKey.match(/address|city|location|area|residence|addr/)) {
+                            fieldMap.address = strValue;
                         }
                     }
-                }
-            }
 
-            simData = simData.filter(item => item && !item.error && Object.keys(item).length > 0);
-
-            if (simData.length === 0) {
-                showError('No record found for this number.');
-                loading.style.display = 'none';
-                return;
-            }
-
-            simData.forEach((sim, index) => {
-                const simCard = document.createElement('div');
-                simCard.className = 'sim-card';
-                const simTitle = document.createElement('div');
-                simTitle.className = 'sim-number';
-                simTitle.textContent = `Record ${index + 1}`;
-                simCard.appendChild(simTitle);
-
-                for (const [key, value] of Object.entries(sim)) {
-                    if (value === null || value === undefined) continue;
-                    if (typeof value === 'object') {
-                        try {
-                            createResultItem(simCard, formatKey(key), JSON.stringify(value));
-                        } catch { continue; }
-                    } else {
-                        if (typeof value === 'string' && (key === 'status' || key === 'response')) continue;
-                        const cleanValue = String(value).replace(/[\[\]]/g, '').replace(/\s+/g, ' ').trim();
-                        createResultItem(simCard, formatKey(key), cleanValue);
+                    // Fallback Heuristics
+                    if (fieldMap.number === 'N/A') {
+                         for (const [key, value] of Object.entries(record)) {
+                             if (String(value).match(/^(92|0)?3\d{9}$/)) {
+                                 fieldMap.number = String(value);
+                                 break;
+                             }
+                         }
                     }
-                }
-                resultContainer.appendChild(simCard);
-            });
 
-            resultContainer.style.display = 'block';
-            loading.style.display = 'none';
+                    html += `
+                        <tr class="hover:bg-purple-50 transition-colors duration-150">
+                            <td class="px-4 py-4 text-sm font-semibold text-gray-900 whitespace-nowrap border-l-4 border-transparent hover:border-purple-500">${fieldMap.number}</td>
+                            <td class="px-4 py-4 text-sm text-gray-800 whitespace-nowrap font-medium">${fieldMap.name}</td>
+                            <td class="px-4 py-4 text-sm text-gray-800 whitespace-nowrap bg-gray-50 font-mono">${fieldMap.cnic}</td>
+                            <td class="px-4 py-4 text-sm text-gray-600 min-w-[200px] break-words">${fieldMap.address}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                dataContent.innerHTML = html;
+                resultArea.classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                errorText.innerText = error.message.includes("Failed to fetch") 
+                    ? "Error: Could not connect to API." 
+                    : error.message;
+                errorMsg.classList.remove('hidden');
+            } finally {
+                loader.style.display = 'none';
+            }
         }
 
-        function formatKey(key) {
-            return key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()).trim();
-        }
-
-        function createResultItem(container, label, value) {
-            if (!value) return;
-            const resultItem = document.createElement('div');
-            resultItem.className = 'result-item';
-            const labelSpan = document.createElement('span');
-            labelSpan.className = 'result-label';
-            labelSpan.textContent = label;
-            const valueSpan = document.createElement('span');
-            valueSpan.className = 'result-value';
-            valueSpan.textContent = value;
-            resultItem.appendChild(labelSpan);
-            resultItem.appendChild(valueSpan);
-            container.appendChild(resultItem);
-        }
-
-        function showError(message) {
-            error.textContent = message;
-            error.style.display = 'block';
-            loading.style.display = 'none';
-        }
-        function showSuccess(message) {
-            success.textContent = message;
-            success.style.display = 'block';
-        }
-    });
+        // Enter Key Support
+        document.getElementById('phoneNumber').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                fetchData();
+            }
+        });
     </script>
 </body>
 </html>
